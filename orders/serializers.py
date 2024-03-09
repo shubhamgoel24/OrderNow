@@ -127,3 +127,72 @@ class OrdersSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError({"Items": f"Invalid item id: {item_id}"})
 
         return order
+
+
+class OrdersUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for orders update
+    """
+
+    restaurant = serializers.SlugRelatedField(read_only=True, slug_field="name")
+    customer = serializers.SlugRelatedField(read_only=True, slug_field="username")
+    items = OrderItemsSerializer(read_only=True, many=True)
+
+    class Meta:
+        model = Orders
+        fields = "__all__"
+        read_only_fields = ["id", "order_datetime", "total_amount", "address", "contact"]
+
+    def validate_status(self, status: str) -> str:
+        """
+        Validate status based on permission of user.
+
+        Args:
+            status (str): Status to be updated
+
+        Returns:
+            str: Validated status
+        """
+
+        request = self.context.get("request")
+        instance = self.instance
+
+        if request.user != instance.restaurant.owner:
+            if instance.status != Orders.OrderStatuses.IN_PROGRESS:
+                raise serializers.ValidationError(
+                    f"Order is no longer In-Progress, current status is: {instance.status}"
+                )
+            elif status != Orders.OrderStatuses.CANCELLED:
+                raise serializers.ValidationError("User can only cancel order.")
+
+        elif instance.status == Orders.OrderStatuses.CANCELLED:
+            raise serializers.ValidationError("Order is already cancelled.")
+
+        return status
+
+    def update(self, instance: Orders, validated_data: dict) -> Orders:
+        """
+        Function to update order status
+
+        Args:
+            instance (Orders): Instance of order being updated
+            validated_data (dict): Validated data
+
+        Returns:
+            Orders: Updated instance of order
+        """
+
+        status = validated_data["status"]
+
+        if status == Orders.OrderStatuses.CANCELLED:
+            with transaction.atomic():
+                customer = Users.objects.select_for_update().get(pk=instance.customer.id)
+                customer.balance += instance.total_amount
+                customer.save()
+                instance.status = status
+                instance.save()
+        else:
+            instance.status = status
+            instance.save()
+
+        return instance
