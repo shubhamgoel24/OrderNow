@@ -372,6 +372,7 @@ class UsersUpdateTests(TestCase):
                     "balance": float(self.user.balance),
                     "phone_number": self.user.phone_number,
                     "street_address": self.user.street_address,
+                    "full_name": f"Test {self.user.last_name}",
                 },
                 "status": "success",
                 "message": None,
