@@ -163,9 +163,6 @@ class OrdersUpdateSerializer(serializers.ModelSerializer):
             elif status != Orders.OrderStatuses.CANCELLED:
                 raise serializers.ValidationError("User can only cancel order.")
 
-        elif instance.status in [Orders.OrderStatuses.CANCELLED, Orders.OrderStatuses.DELIVERED]:
-            raise serializers.ValidationError(f"Order cannot be updated. Current status is: {instance.status}")
-
         return status
 
     def update(self, instance: Orders, validated_data: dict) -> Orders:
@@ -182,15 +179,21 @@ class OrdersUpdateSerializer(serializers.ModelSerializer):
 
         status = validated_data["status"]
 
-        if status == Orders.OrderStatuses.CANCELLED:
-            with transaction.atomic():
-                customer = Users.objects.select_for_update().get(pk=instance.customer.id)
-                customer.balance += instance.total_amount
-                customer.save()
-                instance.status = status
-                instance.save()
-        else:
-            instance.status = status
-            instance.save()
+        with transaction.atomic():
+            order_instance = Orders.objects.select_for_update().get(pk=instance.id)
+            if order_instance.status in [Orders.OrderStatuses.CANCELLED, Orders.OrderStatuses.DELIVERED]:
+                raise serializers.ValidationError(
+                    {"status": [f"Order cannot be updated. Current status is: {order_instance.status}"]}
+                )
 
-        return instance
+            if status == Orders.OrderStatuses.CANCELLED:
+                customer = Users.objects.select_for_update().get(pk=instance.customer.id)
+                customer.balance += order_instance.total_amount
+                customer.save()
+                order_instance.status = status
+                order_instance.save()
+            else:
+                order_instance.status = status
+                order_instance.save()
+
+        return order_instance
