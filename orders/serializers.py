@@ -159,14 +159,12 @@ class OrdersUpdateSerializer(serializers.ModelSerializer):
 
         if request.user != instance.restaurant.owner:
             if instance.status != Orders.OrderStatuses.IN_PROGRESS:
-                raise serializers.ValidationError(
-                    f"Order is no longer In-Progress, current status is: {instance.status}"
-                )
+                raise serializers.ValidationError(f"Order cannot be updated. Current status is: {instance.status}")
             elif status != Orders.OrderStatuses.CANCELLED:
                 raise serializers.ValidationError("User can only cancel order.")
 
-        elif instance.status == Orders.OrderStatuses.CANCELLED:
-            raise serializers.ValidationError("Order is already cancelled.")
+        elif instance.status in [Orders.OrderStatuses.CANCELLED, Orders.OrderStatuses.DELIVERED]:
+            raise serializers.ValidationError(f"Order cannot be updated. Current status is: {instance.status}")
 
         return status
 

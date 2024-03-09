@@ -274,8 +274,6 @@ class GetOrdersListTests(TestCase):
     Class to test get orders view
     """
 
-    maxDiff = None
-
     def setUp(self):
         self.user = G(Users)
         refresh = RefreshToken.for_user(self.user)
@@ -427,5 +425,219 @@ class GetOrdersListTests(TestCase):
                 ],
                 "status": "success",
                 "message": None,
+            },
+        )
+
+
+class UpdateOrderTests(TestCase):
+    """
+    Class to test update orders view
+    """
+
+    def setUp(self):
+        self.user = G(Users)
+        refresh = RefreshToken.for_user(self.user)
+        self.token = str(refresh.access_token)
+        self.restaurant_owner = G(Users)
+        self.restaurant = G(Restaurants, owner=self.restaurant_owner)
+
+    def test_update_users_orders_success(self):
+        """
+        Testcase for updating user's order success case.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user)
+        order_item = G(OrderItems, order=order)
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Cancelled"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {
+                    "address": order.address,
+                    "contact": order.contact,
+                    "customer": f"{self.user.id}",
+                    "id": order.id,
+                    "items": [
+                        {
+                            "id": order_item.id,
+                            "item": order_item.item.name,
+                            "price": order_item.price,
+                            "quantity": order_item.quantity,
+                        }
+                    ],
+                    "order_datetime": ANY,
+                    "restaurant": f"{self.restaurant.id}",
+                    "status": "Cancelled",
+                    "total_amount": order.total_amount,
+                },
+                "status": "success",
+                "message": None,
+            },
+        )
+        self.assertEqual(Users.objects.get(pk=self.user.id).balance, self.user.balance + order.total_amount)
+
+    def test_update_users_orders_failure_when_order_not_own(self):
+        """
+        Testcase for updating user's order failure case when trying to update another user's order.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user)
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Cancelled"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(G(Users)).access_token}",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": None,
+                "status": "error",
+                "message": "You do not have permission to perform this action.",
+            },
+        )
+
+    def test_update_users_orders_failure_when_status_already_cancelled_for_customer(self):
+        """
+        Testcase for updating user's order failure case when order is already cancelled.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user, status="Cancelled")
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Cancelled"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {"status": ["Order cannot be updated. Current status is: Cancelled"]},
+                "status": "error",
+                "message": None,
+            },
+        )
+
+    def test_update_users_orders_failure_when_status_already_cancelled_for_restaurant_owner(self):
+        """
+        Testcase for updating user's order failure case when order is already cancelled.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user, status="Cancelled")
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Cancelled"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(self.restaurant_owner).access_token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {"status": ["Order cannot be updated. Current status is: Cancelled"]},
+                "status": "error",
+                "message": None,
+            },
+        )
+
+    def test_update_users_orders_failure_when_invalid_status_sent_by_customer(self):
+        """
+        Testcase for updating user's order failure case when invalid status is sent by customer.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user)
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Dispatched"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {"status": ["User can only cancel order."]},
+                "status": "error",
+                "message": None,
+            },
+        )
+
+    def test_update_users_order_by_restaurant_owner_success(self):
+        """
+        Testcase for updating user's order success case by restaurant owner.
+        """
+
+        order = G(Orders, restaurant=self.restaurant, customer=self.user)
+        order_item = G(OrderItems, order=order)
+
+        response = self.client.patch(
+            reverse("orders:orders-detail", kwargs={"pk": order.id}),
+            data={"status": "Dispatched"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(self.restaurant_owner).access_token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {
+                    "address": order.address,
+                    "contact": order.contact,
+                    "customer": f"{self.user.id}",
+                    "id": order.id,
+                    "items": [
+                        {
+                            "id": order_item.id,
+                            "item": order_item.item.name,
+                            "price": order_item.price,
+                            "quantity": order_item.quantity,
+                        }
+                    ],
+                    "order_datetime": ANY,
+                    "restaurant": f"{self.restaurant.id}",
+                    "status": "Dispatched",
+                    "total_amount": order.total_amount,
+                },
+                "status": "success",
+                "message": None,
+            },
+        )
+
+
+class TestCustom404(TestCase):
+    def test_custom_404_success(self):
+        """
+        Test custom 404.
+        """
+
+        response = self.client.post(
+            "invalid/",
+        )
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": None,
+                "status": "error",
+                "message": "URL Not Found.",
             },
         )

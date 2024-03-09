@@ -331,6 +331,41 @@ class UsersUpdateTests(TestCase):
         )
         self.assertEqual(Users.objects.get(pk=self.user.id).first_name, "Test")
 
+    def test_user_update_success_for_custom_action(self):
+        """
+        Testcase for testing user update success for custom action.
+        """
+
+        response = self.client.patch(
+            reverse("users:users-custom-patch-method"),
+            {"first_name": "Test"},
+            content_type="application/json",
+            HTTP_AUTHORIZATION=f"Bearer {self.token}",
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {
+                    "username": self.user.username,
+                    "id": self.user.id,
+                    "email": self.user.email,
+                    "city": self.user.city,
+                    "state": self.user.state,
+                    "zipcode": self.user.zipcode,
+                    "first_name": "Test",
+                    "last_name": self.user.last_name,
+                    "balance": float(self.user.balance),
+                    "phone_number": self.user.phone_number,
+                    "street_address": self.user.street_address,
+                },
+                "status": "success",
+                "message": None,
+            },
+        )
+        self.assertEqual(Users.objects.get(pk=self.user.id).first_name, "Test")
+
     def test_user_update_without_auth(self):
         """
         Testcase for testing user update failure when auth credentials are not provided.
