@@ -59,7 +59,6 @@ class OrdersSerializer(serializers.ModelSerializer):
         """
 
         request = self.context.get("request")
-        restaurant_id = self.context.get("view").kwargs["restaurant_id"]
         items_data = validated_data.pop("items", [])
 
         try:
@@ -78,16 +77,25 @@ class OrdersSerializer(serializers.ModelSerializer):
                         }
                     )
 
-                order = Orders.objects.create(
-                    **validated_data, total_amount=0, customer=customer, restaurant_id=restaurant_id
-                )
-
                 total_amount = 0
+                restaurant = None
+                order = None
+
                 for item_data in items_data:
                     item_id = item_data.get("id")
                     quantity = item_data.get("quantity")
 
-                    menu_item = Menus.objects.select_for_update().get(pk=item_id, restaurant_id=restaurant_id)
+                    menu_item = Menus.objects.select_for_update().get(pk=item_id)
+
+                    if not restaurant:
+                        restaurant = menu_item.restaurant
+                        if not restaurant.is_active:
+                            raise serializers.ValidationError({"Items": f"Invalid item id: {item_id}"})
+                        order = Orders.objects.create(
+                            **validated_data, total_amount=0, customer=customer, restaurant=restaurant
+                        )
+                    elif restaurant != menu_item.restaurant:
+                        raise serializers.ValidationError({"Items": "Select all items from same restaurant"})
 
                     if menu_item.quantity < quantity:
                         raise serializers.ValidationError(
