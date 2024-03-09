@@ -17,7 +17,7 @@ app_name = "restaurants"
 
 router = DefaultRouter()
 router.register(r"restaurants", RestaurantViewSet, basename="restaurants")
-router.register(r"restaurants/(?P<restaurant_id>[^/.]+)/menus", MenuViewSet, basename="restaurant-menus")
+router.register(r"restaurants/(?P<restaurant_id>[^/.]+)/menus", MenuViewSet, basename="menus")
 router.register(r"restaurants/(?P<restaurant_id>[^/.]+)/orders", OrderViewSet, basename="orders")
 
 urlpatterns = [
