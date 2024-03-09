@@ -87,7 +87,7 @@ class ReportsViewset(viewsets.ViewSet):
         orders_query = Orders.objects.filter(restaurant_id=restaurant_id)
 
         item_popularity = (
-            orders_query.values(item=models.F("items__item__name"))
+            orders_query.values(item=models.F("items__item__id"))
             .annotate(orders=models.Count("customer", distinct=True))
             .order_by("orders")
         )
@@ -100,7 +100,7 @@ class ReportsViewset(viewsets.ViewSet):
         customer_orders = (
             orders_query.annotate(item_count=models.Count("orders__items__item"))
             .annotate(row=models.Window(RowNumber(), partition_by="email", order_by=models.F("item_count").desc()))
-            .values("email", "orders__items__item__name", "item_count", "row")
+            .values("email", "orders__items__item__id", "item_count", "row")
         )
 
         raw_sql = f"SELECT * from ({customer_orders.query}) AS subquery WHERE `row` = 1;"
@@ -110,6 +110,6 @@ class ReportsViewset(viewsets.ViewSet):
 
         result = []
         for row in rows:
-            result.append({"email": row[0], "item_name": row[1], "item_count": row[2]})
+            result.append({"email": row[0], "item_id": row[1], "item_count": row[2]})
 
         return Response(result)
