@@ -27,7 +27,12 @@ class UsersRegistrationTests(TestCase):
         user_data = get_random_user()
         response = self.client.post(reverse("users:users-list"), data=user_data)
 
-        expected_data = {**user_data, "id": ANY, "balance": 1000.00}
+        expected_data = {
+            **user_data,
+            "id": ANY,
+            "balance": 1000.00,
+            "full_name": f"{user_data['first_name']} {user_data['last_name']}",
+        }
         del expected_data["password"]
 
         self.assertEqual(response.status_code, 201)
@@ -60,7 +65,12 @@ class UsersRegistrationTests(TestCase):
         user_data_with_balance["balance"] = 10000
         response = self.client.post(reverse("users:users-list"), data=user_data_with_balance)
 
-        expected_data = {**user_data_with_balance, "id": ANY, "balance": 10000.00}
+        expected_data = {
+            **user_data_with_balance,
+            "id": ANY,
+            "balance": 10000.00,
+            "full_name": f"{user_data_with_balance['first_name']} {user_data_with_balance['last_name']}",
+        }
         del expected_data["password"]
 
         self.assertEqual(response.status_code, 201)
@@ -171,6 +181,7 @@ class UsersRetrieveTests(TestCase):
                         "balance": float(self.user.balance),
                         "phone_number": self.user.phone_number,
                         "street_address": self.user.street_address,
+                        "full_name": f"{self.user.first_name} {self.user.last_name}",
                     }
                 ],
                 "status": "success",
@@ -221,6 +232,7 @@ class UsersRetrieveTests(TestCase):
                     "phone_number": self.user.phone_number,
                     "street_address": self.user.street_address,
                     "restaurants": [{"id": r1.id, "name": r1.name}, {"id": r2.id, "name": r2.name}],
+                    "full_name": f"{self.user.first_name} {self.user.last_name}",
                 },
                 "status": "success",
                 "message": None,
@@ -324,6 +336,7 @@ class UsersUpdateTests(TestCase):
                     "balance": float(self.user.balance),
                     "phone_number": self.user.phone_number,
                     "street_address": self.user.street_address,
+                    "full_name": f"Test {self.user.last_name}",
                 },
                 "status": "success",
                 "message": None,
