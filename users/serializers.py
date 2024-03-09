@@ -24,8 +24,9 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "email",
             "street_address",
             "phone_number",
+            "full_name",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "full_name"]
 
 
 class UserSerializer(UserUpdateSerializer):
@@ -40,7 +41,7 @@ class UserSerializer(UserUpdateSerializer):
         fields = UserUpdateSerializer.Meta.fields + [
             "password",
         ]
-        read_only_fields = ["id"]
+        read_only_fields = ["id", "full_name"]
 
     def create(self, validated_data: dict) -> Users:
         """

@@ -47,6 +47,7 @@ class Users(AbstractUser):
             "unique": "This phone number is already in use.",
         },
     )
+    full_name = models.CharField(max_length=300, blank=True)
 
     def delete(self):
         self.is_active = False
