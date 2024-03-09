@@ -3,17 +3,13 @@ Serializers module
 """
 
 from rest_framework import serializers
+from restaurants.serializers import RestaurantSerializer
+from django.contrib.auth.password_validation import validate_password
 
 from users.models import Users
 
 
-class UserSerializer(serializers.ModelSerializer):
-    """
-    Serializer class for users
-    """
-
-    password = serializers.CharField(write_only=True, min_length=8)
-
+class UserUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Users
         fields = [
@@ -21,12 +17,26 @@ class UserSerializer(serializers.ModelSerializer):
             "city",
             "state",
             "zipcode",
-            "password",
             "first_name",
             "last_name",
             "balance",
             "id",
             "email",
+        ]
+        read_only_fields = ["id"]
+
+
+class UserSerializer(UserUpdateSerializer):
+    """
+    Serializer class for users
+    """
+
+    password = serializers.CharField(write_only=True, validators=[validate_password])
+
+    class Meta:
+        model = Users
+        fields = UserUpdateSerializer.Meta.fields + [
+            "password",
         ]
         read_only_fields = ["id"]
 
@@ -46,25 +56,17 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-    def update(self, instance: Users, validated_data: dict) -> Users:
-        """
-        Function to update a user
 
-        Args:
-            instance (Users): Instance of user to be updated
-            validated_data (dict): Data to update user
+class UserDetailsSerializer(UserSerializer):
+    """
+    Serializer class for users to show their restaurants
+    """
 
-        Returns:
-            Users: Updated user instance
-        """
+    restaurants = RestaurantSerializer(many=True, read_only=True)
 
-        instance.email = validated_data.get("email", instance.email)
-        instance.city = validated_data.get("city", instance.city)
-        instance.state = validated_data.get("state", instance.state)
-        instance.zipcode = validated_data.get("zipcode", instance.zipcode)
-        instance.first_name = validated_data.get("first_name", instance.first_name)
-        instance.last_name = validated_data.get("last_name", instance.last_name)
-        instance.balance = validated_data.get("balance", instance.balance)
-
-        instance.save()
-        return instance
+    class Meta:
+        model = Users
+        fields = UserSerializer.Meta.fields + [
+            "restaurants",
+        ]
+        read_only_fields = ["id"]

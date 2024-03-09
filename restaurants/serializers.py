@@ -6,6 +6,7 @@ from rest_framework import serializers
 
 from restaurants.models import Restaurants
 
+
 class RestaurantSerializer(serializers.ModelSerializer):
     """
     Serializer class for restaurants
@@ -29,5 +30,6 @@ class RestaurantSerializer(serializers.ModelSerializer):
 
         request = self.context.get("request")
         restaurant = Restaurants.objects.create(**validated_data, owner=request.user)
-        restaurant.save()
+        request.user.is_restaurant_owner = True
+        request.user.save()
         return restaurant

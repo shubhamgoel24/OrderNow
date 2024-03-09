@@ -7,6 +7,7 @@ from unittest.mock import ANY
 from django.test import TestCase
 from django.urls import reverse
 from ddf import G, N
+from restaurants.models import Restaurants
 
 from users.models import Users
 from users.tests.test_data import get_random_user
@@ -23,7 +24,7 @@ class UsersRegistrationTests(TestCase):
         """
 
         user_data = get_random_user()
-        response = self.client.post(reverse("users:users"), data=user_data)
+        response = self.client.post(reverse("users:users-list"), data=user_data)
 
         expected_data = {**user_data, "id": ANY, "balance": 1000.00}
         del expected_data["password"]
@@ -41,7 +42,7 @@ class UsersRegistrationTests(TestCase):
         """
 
         invalid_user_data = get_random_user(email="invalidemail")
-        response = self.client.post(reverse("users:users"), data=invalid_user_data)
+        response = self.client.post(reverse("users:users-list"), data=invalid_user_data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -56,7 +57,7 @@ class UsersRegistrationTests(TestCase):
 
         user_data_with_balance = get_random_user()
         user_data_with_balance["balance"] = 10000
-        response = self.client.post(reverse("users:users"), data=user_data_with_balance)
+        response = self.client.post(reverse("users:users-list"), data=user_data_with_balance)
 
         expected_data = {**user_data_with_balance, "id": ANY, "balance": 10000.00}
         del expected_data["password"]
@@ -75,7 +76,7 @@ class UsersRegistrationTests(TestCase):
 
         existing_user = G(Users)
         user_data = get_random_user(email=existing_user.email)
-        response = self.client.post(reverse("users:users"), data=user_data)
+        response = self.client.post(reverse("users:users-list"), data=user_data)
 
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
@@ -150,7 +151,7 @@ class UsersRetrieveTests(TestCase):
         Testcase for testing user get details success.
         """
 
-        response = self.client.get(reverse("users:users"), HTTP_AUTHORIZATION=f"Bearer {self.token}")
+        response = self.client.get(reverse("users:users-list"), HTTP_AUTHORIZATION=f"Bearer {self.token}")
 
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
@@ -179,12 +180,46 @@ class UsersRetrieveTests(TestCase):
         Testcase for testing user get details failure when auth credentials are not provided.
         """
 
-        response = self.client.get(reverse("users:users"))
+        response = self.client.get(reverse("users:users-list"))
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
             response.json(),
             {"data": None, "status": "error", "message": "Authentication credentials were not provided."},
+        )
+
+    def test_user_get_details_success_for_restaurant_owner(self):
+        """
+        Testcase for testing user get details success for restaurant owner.
+        """
+
+        r1 = G(Restaurants, owner=self.user)
+        r2 = G(Restaurants, owner=self.user)
+        self.user.is_restaurant_owner = True
+        self.user.save()
+        response = self.client.get(
+            reverse("users:users-detail", kwargs={"pk": self.user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.json(),
+            {
+                "data": {
+                    "username": self.user.username,
+                    "id": self.user.id,
+                    "email": self.user.email,
+                    "city": self.user.city,
+                    "state": self.user.state,
+                    "zipcode": self.user.zipcode,
+                    "first_name": self.user.first_name,
+                    "last_name": self.user.last_name,
+                    "balance": float(self.user.balance),
+                    "restaurants": [{"id": r1.id, "name": r1.name}, {"id": r2.id, "name": r2.name}],
+                },
+                "status": "success",
+                "message": None,
+            },
         )
 
 
@@ -207,7 +242,7 @@ class UsersDeleteTests(TestCase):
         """
 
         response = self.client.delete(
-            reverse("users:users", kwargs={"pk": self.user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
+            reverse("users:users-detail", kwargs={"pk": self.user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
         )
 
         self.assertEqual(response.status_code, 204)
@@ -218,7 +253,7 @@ class UsersDeleteTests(TestCase):
         Testcase for testing user delete failure when auth credentials are not provided.
         """
 
-        response = self.client.delete(reverse("users:users", kwargs={"pk": self.user.id}))
+        response = self.client.delete(reverse("users:users-detail", kwargs={"pk": self.user.id}))
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
@@ -233,7 +268,7 @@ class UsersDeleteTests(TestCase):
 
         another_user = G(Users)
         response = self.client.delete(
-            reverse("users:users", kwargs={"pk": another_user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
+            reverse("users:users-detail", kwargs={"pk": another_user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
         )
 
         self.assertEqual(response.status_code, 404)
@@ -262,7 +297,7 @@ class UsersUpdateTests(TestCase):
         """
 
         response = self.client.patch(
-            reverse("users:users", kwargs={"pk": self.user.id}),
+            reverse("users:users-detail", kwargs={"pk": self.user.id}),
             {"first_name": "Test"},
             content_type="application/json",
             HTTP_AUTHORIZATION=f"Bearer {self.token}",
@@ -294,7 +329,7 @@ class UsersUpdateTests(TestCase):
         Testcase for testing user update failure when auth credentials are not provided.
         """
 
-        response = self.client.patch(reverse("users:users", kwargs={"pk": self.user.id}))
+        response = self.client.patch(reverse("users:users-detail", kwargs={"pk": self.user.id}))
 
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
@@ -309,7 +344,7 @@ class UsersUpdateTests(TestCase):
 
         another_user = G(Users)
         response = self.client.patch(
-            reverse("users:users", kwargs={"pk": another_user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
+            reverse("users:users-detail", kwargs={"pk": another_user.id}), HTTP_AUTHORIZATION=f"Bearer {self.token}"
         )
 
         self.assertEqual(response.status_code, 404)

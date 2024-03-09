@@ -14,4 +14,8 @@ class Restaurants(models.Model):
 
     name = models.CharField(max_length=120)
     is_active = models.BooleanField(default=True)
-    owner = models.ForeignKey(Users, on_delete=models.PROTECT)
+    owner = models.ForeignKey(Users, related_name="restaurants", on_delete=models.PROTECT)
+
+    def delete(self):
+        self.is_active = False
+        self.save()
