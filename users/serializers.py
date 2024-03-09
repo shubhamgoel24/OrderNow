@@ -44,9 +44,15 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["balance", "id"]
 
-    def create(self, validated_data):
+    def create(self, validated_data: dict) -> Users:
         """
         Function for creation of a new user
+
+        Args:
+            validated_data (dict): validated user data
+
+        Returns:
+            Users: Created user object
         """
 
         user = Users.objects.create(**validated_data)
@@ -54,9 +60,16 @@ class UserSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-    def update(self, instance, validated_data):
+    def update(self, instance: Users, validated_data: dict) -> Users:
         """
         Function to update a user
+
+        Args:
+            instance (Users): Instance of user to be updated
+            validated_data (dict): Data to update user
+
+        Returns:
+            Users: Updated user instance
         """
 
         instance.email = validated_data.get("email", instance.email)
