@@ -135,7 +135,8 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_RENDERER_CLASSES": ["orderNow.renderers.CustomRenderer"],
+    "COERCE_DECIMAL_TO_STRING": False,
 }
 
 AUTH_USER_MODEL = "users.Users"
-APPEND_SLASH=False
+APPEND_SLASH = False

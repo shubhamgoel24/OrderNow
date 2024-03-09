@@ -5,15 +5,14 @@ Custom permissions for Users
 from rest_framework import permissions
 
 
-class IsLoggedInUser(permissions.BasePermission):
+class IsPostRequest(permissions.BasePermission):
     """
-    Custom permission to only allow logged in user to view or edit their details
-    and anyone to register.
+    Custom permission to allow if request method is post
     """
 
     def has_permission(self, request, _view) -> bool:
         """
-        Function to check if user have permission
+        Function to check if request if post
 
         Args:
             request: Request object
@@ -22,7 +21,4 @@ class IsLoggedInUser(permissions.BasePermission):
             bool: `True` if permission is granted, `False` otherwise.
         """
 
-        if request.method == "POST":
-            return True
-
-        return request.user.is_authenticated
+        return request.method == "POST"
