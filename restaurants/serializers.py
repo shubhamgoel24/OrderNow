@@ -70,3 +70,21 @@ class MenuUpdateSerializer(serializers.ModelSerializer):
         model = Menus
         read_only_fields = ["id", "name"]
         exclude = ["restaurant"]
+
+
+class DateRangeInputSerializer(serializers.Serializer):
+    """
+    Date range input serializer
+    """
+
+    from_date = serializers.DateField(required=False, allow_null=True)
+    to_date = serializers.DateField(required=False, allow_null=True)
+
+    def validate(self, data):
+        from_date = data.get("from_date")
+        to_date = data.get("to_date")
+
+        if (from_date or to_date) and not (to_date and from_date):
+            raise serializers.ValidationError({"Params": "Please provide both 'from_date' and 'to_date'"})
+
+        return data
