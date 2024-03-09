@@ -29,7 +29,7 @@ class UsersRegistrationTests(TestCase):
         del expected_data["password"]
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json(), {"code": 201, "data": expected_data, "status": "success", "message": None})
+        self.assertEqual(response.json(), {"data": expected_data, "status": "success", "message": None})
         self.assertDictContainsSubset(
             {**expected_data, "balance": Decimal("1000.00")},
             Users.objects.get(pk=response.json()["data"]["id"]).__dict__,
@@ -46,7 +46,7 @@ class UsersRegistrationTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(
             response.json(),
-            {"code": 400, "data": {"email": ["Enter a valid email address."]}, "status": "error", "message": None},
+            {"data": {"email": ["Enter a valid email address."]}, "status": "error", "message": None},
         )
 
     def test_user_registration_success_when_balance_is_provided(self):
@@ -62,7 +62,7 @@ class UsersRegistrationTests(TestCase):
         del expected_data["password"]
 
         self.assertEqual(response.status_code, 201)
-        self.assertEqual(response.json(), {"code": 201, "data": expected_data, "status": "success", "message": None})
+        self.assertEqual(response.json(), {"data": expected_data, "status": "success", "message": None})
         self.assertDictContainsSubset(
             {**expected_data, "balance": Decimal("10000.00")},
             Users.objects.get(pk=response.json()["data"]["id"]).__dict__,
@@ -81,7 +81,6 @@ class UsersRegistrationTests(TestCase):
         self.assertEqual(
             response.json(),
             {
-                "code": 400,
                 "data": {"email": ["A user with that email already exists."]},
                 "status": "error",
                 "message": None,
@@ -108,7 +107,7 @@ class UsersLoginTests(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(
             response.json(),
-            {"code": 200, "data": {"access": ANY, "refresh": ANY}, "status": "success", "message": None},
+            {"data": {"access": ANY, "refresh": ANY}, "status": "success", "message": None},
         )
 
     def test_user_login_failure(self):
@@ -126,7 +125,6 @@ class UsersLoginTests(TestCase):
         self.assertEqual(
             response.json(),
             {
-                "code": 401,
                 "data": None,
                 "status": "error",
                 "message": "No active account found with the given credentials",
@@ -158,7 +156,6 @@ class UsersRetrieveTests(TestCase):
         self.assertEqual(
             response.json(),
             {
-                "code": 200,
                 "data": [
                     {
                         "username": self.user.username,
@@ -187,7 +184,7 @@ class UsersRetrieveTests(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
             response.json(),
-            {"code": 401, "data": None, "status": "error", "message": "Authentication credentials were not provided."},
+            {"data": None, "status": "error", "message": "Authentication credentials were not provided."},
         )
 
 
@@ -226,7 +223,7 @@ class UsersDeleteTests(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
             response.json(),
-            {"code": 401, "data": None, "status": "error", "message": "Authentication credentials were not provided."},
+            {"data": None, "status": "error", "message": "Authentication credentials were not provided."},
         )
 
     def test_user_delete_failure_when_incorrect_id_is_provided(self):
@@ -242,7 +239,7 @@ class UsersDeleteTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
             response.json(),
-            {"code": 404, "data": None, "status": "error", "message": "Not found."},
+            {"data": None, "status": "error", "message": "Not found."},
         )
 
 
@@ -275,7 +272,6 @@ class UsersUpdateTests(TestCase):
         self.assertEqual(
             response.json(),
             {
-                "code": 200,
                 "data": {
                     "username": self.user.username,
                     "id": self.user.id,
@@ -303,7 +299,7 @@ class UsersUpdateTests(TestCase):
         self.assertEqual(response.status_code, 401)
         self.assertEqual(
             response.json(),
-            {"code": 401, "data": None, "status": "error", "message": "Authentication credentials were not provided."},
+            {"data": None, "status": "error", "message": "Authentication credentials were not provided."},
         )
 
     def test_user_update_failure_when_incorrect_id_is_provided(self):
@@ -319,5 +315,5 @@ class UsersUpdateTests(TestCase):
         self.assertEqual(response.status_code, 404)
         self.assertEqual(
             response.json(),
-            {"code": 404, "data": None, "status": "error", "message": "Not found."},
+            {"data": None, "status": "error", "message": "Not found."},
         )
