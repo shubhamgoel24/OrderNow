@@ -4,7 +4,7 @@ Serializers module
 
 from rest_framework import serializers
 
-from restaurants.models import Restaurants
+from restaurants.models import Menus, Restaurants
 
 
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -33,3 +33,29 @@ class RestaurantSerializer(serializers.ModelSerializer):
         request.user.is_restaurant_owner = True
         request.user.save()
         return restaurant
+
+
+class MenuSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for menus
+    """
+
+    class Meta:
+        model = Menus
+        read_only_fields = ["id"]
+        exclude = ["restaurant"]
+
+    def create(self, validated_data: dict) -> Restaurants:
+        """
+        Function for creation of a new menu
+
+        Args:
+            validated_data (dict): validated menu data
+
+        Returns:
+            Restaurants: Created Menu object
+        """
+
+        restaurant_id = self.context.get("view").kwargs["restaurant_id"]
+        menu = Menus.objects.create(**validated_data, restaurant_id=restaurant_id)
+        return menu
