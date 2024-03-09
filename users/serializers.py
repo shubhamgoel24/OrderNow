@@ -3,7 +3,6 @@ Serializers module
 """
 
 from rest_framework import serializers
-from rest_framework.validators import UniqueValidator
 
 from users.models import Users
 
@@ -13,20 +12,7 @@ class UserSerializer(serializers.ModelSerializer):
     Serializer class for users
     """
 
-    username = serializers.CharField(
-        required=True,
-        max_length=150,
-        validators=[UniqueValidator(queryset=Users.objects.all(), message="Username already in use.")],
-    )
-    city = serializers.CharField(required=True, max_length=20)
-    state = serializers.CharField(required=True, max_length=20)
-    zipcode = serializers.CharField(required=True, max_length=20)
-    password = serializers.CharField(required=True, write_only=True, min_length=8)
-    first_name = serializers.CharField(required=True, max_length=150)
-    last_name = serializers.CharField(required=True, max_length=150)
-    email = serializers.EmailField(
-        required=True, validators=[UniqueValidator(queryset=Users.objects.all(), message="Email already in use.")]
-    )
+    password = serializers.CharField(write_only=True, min_length=8)
 
     class Meta:
         model = Users
@@ -42,7 +28,7 @@ class UserSerializer(serializers.ModelSerializer):
             "id",
             "email",
         ]
-        read_only_fields = ["balance", "id"]
+        read_only_fields = ["id"]
 
     def create(self, validated_data: dict) -> Users:
         """
@@ -78,10 +64,7 @@ class UserSerializer(serializers.ModelSerializer):
         instance.zipcode = validated_data.get("zipcode", instance.zipcode)
         instance.first_name = validated_data.get("first_name", instance.first_name)
         instance.last_name = validated_data.get("last_name", instance.last_name)
-
-        password = validated_data.get("password")
-        if password:
-            instance.set_password(password)
+        instance.balance = validated_data.get("balance", instance.balance)
 
         instance.save()
         return instance
