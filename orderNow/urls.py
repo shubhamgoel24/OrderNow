@@ -26,5 +26,6 @@ handler404 = error_404
 urlpatterns = [
     path("", include("users.urls")),
     path("", include("restaurants.urls")),
+    path("", include("orders.urls")),
     path("admin/", admin.site.urls),
 ]
