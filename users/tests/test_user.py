@@ -4,11 +4,12 @@ Users test module
 
 from decimal import Decimal
 from unittest.mock import ANY
+
+from ddf import G, N
 from django.test import TestCase
 from django.urls import reverse
-from ddf import G, N
-from restaurants.models import Restaurants
 
+from restaurants.models import Restaurants
 from users.models import Users
 from users.tests.test_data import get_random_user
 
@@ -168,6 +169,8 @@ class UsersRetrieveTests(TestCase):
                         "first_name": self.user.first_name,
                         "last_name": self.user.last_name,
                         "balance": float(self.user.balance),
+                        "phone_number": self.user.phone_number,
+                        "street_address": self.user.street_address,
                     }
                 ],
                 "status": "success",
@@ -215,6 +218,8 @@ class UsersRetrieveTests(TestCase):
                     "first_name": self.user.first_name,
                     "last_name": self.user.last_name,
                     "balance": float(self.user.balance),
+                    "phone_number": self.user.phone_number,
+                    "street_address": self.user.street_address,
                     "restaurants": [{"id": r1.id, "name": r1.name}, {"id": r2.id, "name": r2.name}],
                 },
                 "status": "success",
@@ -317,6 +322,8 @@ class UsersUpdateTests(TestCase):
                     "first_name": "Test",
                     "last_name": self.user.last_name,
                     "balance": float(self.user.balance),
+                    "phone_number": self.user.phone_number,
+                    "street_address": self.user.street_address,
                 },
                 "status": "success",
                 "message": None,

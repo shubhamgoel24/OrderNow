@@ -22,7 +22,7 @@ class RestaurantSerializer(serializers.ModelSerializer):
         Function for creation of a new restaurant
 
         Args:
-            validated_data (dict): validated user data
+            validated_data (dict): validated restaurant data
 
         Returns:
             Restaurants: Created restaurant object
@@ -45,7 +45,7 @@ class MenuSerializer(serializers.ModelSerializer):
         read_only_fields = ["id"]
         exclude = ["restaurant"]
 
-    def create(self, validated_data: dict) -> Restaurants:
+    def create(self, validated_data: dict) -> Menus:
         """
         Function for creation of a new menu
 
@@ -59,3 +59,14 @@ class MenuSerializer(serializers.ModelSerializer):
         restaurant_id = self.context.get("view").kwargs["restaurant_id"]
         menu = Menus.objects.create(**validated_data, restaurant_id=restaurant_id)
         return menu
+
+
+class MenuUpdateSerializer(serializers.ModelSerializer):
+    """
+    Serializer class for menu update
+    """
+
+    class Meta:
+        model = Menus
+        read_only_fields = ["id", "name"]
+        exclude = ["restaurant"]

@@ -18,8 +18,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 
+from orderNow.views import error_404, error_500
+
+handler500 = error_500
+handler404 = error_404
+
 urlpatterns = [
     path("", include("users.urls")),
     path("", include("restaurants.urls")),
+    path("", include("orders.urls")),
     path("admin/", admin.site.urls),
 ]

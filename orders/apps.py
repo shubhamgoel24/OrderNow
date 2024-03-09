@@ -1,10 +1,10 @@
 """
-Restaurants app module
+Orders app module
 """
 
 from django.apps import AppConfig
 
 
-class RestaurantsConfig(AppConfig):
+class OrdersConfig(AppConfig):
     default_auto_field = "django.db.models.BigAutoField"
-    name = "restaurants"
+    name = "orders"

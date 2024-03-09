@@ -2,18 +2,15 @@
 Routes Module
 """
 
-from django.urls import path
+from django.urls import include, path
+from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt import views as jwt_views
 
-from django.urls import path, include
-from rest_framework.routers import DefaultRouter
 from users.views import UserViewSet
-
 
 app_name = "users"
 router = DefaultRouter()
 router.register(r"users", UserViewSet, basename="users")
-
 
 urlpatterns = [
     path("login/", jwt_views.TokenObtainPairView.as_view(), name="login"),

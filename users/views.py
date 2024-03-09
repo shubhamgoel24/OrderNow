@@ -3,13 +3,17 @@ Users view module
 """
 
 from django.db.models import Prefetch
-from rest_framework import viewsets, permissions
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
-from restaurants.models import Restaurants
 
-from users.permissions import IsPostRequest
-from users.serializers import UserDetailsSerializer, UserSerializer, UserUpdateSerializer
+from restaurants.models import Restaurants
 from users.models import Users
+from users.permissions import IsPostRequest
+from users.serializers import (
+    UserDetailsSerializer,
+    UserSerializer,
+    UserUpdateSerializer,
+)
 
 
 class UserViewSet(viewsets.ModelViewSet):

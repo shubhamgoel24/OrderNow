@@ -2,10 +2,10 @@
 Serializers module
 """
 
-from rest_framework import serializers
-from restaurants.serializers import RestaurantSerializer
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
 
+from restaurants.serializers import RestaurantSerializer
 from users.models import Users
 
 
@@ -22,6 +22,8 @@ class UserUpdateSerializer(serializers.ModelSerializer):
             "balance",
             "id",
             "email",
+            "street_address",
+            "phone_number",
         ]
         read_only_fields = ["id"]
 

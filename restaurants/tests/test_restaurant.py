@@ -3,9 +3,10 @@ Restaurants test module
 """
 
 from unittest.mock import ANY
+
+from ddf import G, N
 from django.test import TestCase
 from django.urls import reverse
-from ddf import G, N
 
 from restaurants.models import Restaurants
 from users.models import Users

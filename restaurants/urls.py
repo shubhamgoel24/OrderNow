@@ -2,20 +2,18 @@
 Routes Module
 """
 
-from django.urls import path, include
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
-from restaurants.views import MenuViewSet, RestaurantViewSet
+from restaurants.views import MenuViewSet, RestaurantOrdersList, RestaurantViewSet
 
 app_name = "restaurants"
 
 router = DefaultRouter()
 router.register(r"restaurants", RestaurantViewSet, basename="restaurants")
-
-menu_router = DefaultRouter()
-menu_router.register(r"menus", MenuViewSet, basename="menus")
+router.register(r"restaurants/(?P<restaurant_id>[^/.]+)/menus", MenuViewSet, basename="restaurant-menus")
 
 urlpatterns = [
     path("", include(router.urls)),
-    path("restaurants/<int:restaurant_id>/", include(menu_router.urls)),
+    path("restaurants/<int:restaurant_id>/all-orders/", RestaurantOrdersList.as_view(), name="restaurant_orders"),
 ]
